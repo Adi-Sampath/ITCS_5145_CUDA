@@ -59,9 +59,9 @@ int main (int argc, char* argv[]) {
 
   cudaMemcpy(d_poly, poly, (degree+1)*sizeof(float), cudaMemcpyHostToDevice);
 
-  polynomial_expansion<<<numBlocks, blockSize>>>(d_poly, degree, n, d_array);
-  cudaMemcpy(array, d_array, n * sizeof(float), cudaMemcpyDeviceToHost);
-  
+  polynomial_expansion<<<(n+block_size-1)/block_size, block_size>>>(d_poly, degree, n, d_array);
+  cudaMemcpy(array, d_array, n*sizeof(float), cudaMemcpyDeviceToHost);
+
   //for (int iter = 0; iter<nbiter; ++iter)
   //  polynomial_expansion (poly, degree, n, array);
 
