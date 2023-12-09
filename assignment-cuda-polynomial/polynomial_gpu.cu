@@ -5,13 +5,15 @@
 
 
 __global__ void polynomial_expansion(float* poly, int degree, int n, float* array) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    int i = blockIdx.x*blockDim.x + threadIdx.x;
     if (i < n) {
         float tmp = array[i];
-        for (int j = 0; j <= degree; j++) {  // Ensure j iterates up to 'degree'
-            tmp *= poly[j];
+        float result = 0.;
+        for (int j = 0; j < degree+1; j++) {
+            result += poly[j] * tmp;
+            tmp *= array[i];
         }
-        array[i] = tmp;
+        array[i] = result;
     }
 }
 
