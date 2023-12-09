@@ -4,39 +4,31 @@
 
 
 
-__global__ void polynomial_expansion (float* poly, int degree, int n, float* array) {
-  //TODO: Write code to use the GPU here!
-  //code should write the output back to array
-
-  int i = blockIdx.x * blockDim.x + threadIdx.x;
-  if (i < n) {
-    float tmp = array[i];
-    for (int j = 0; j < degree; j++) {
-      tmp *= poly[j];
+__global__ void polynomial_expansion(float* poly, int degree, int n, float* array) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < n) {
+        float tmp = array[i];
+        for (int j = 0; j <= degree; j++) {  // Ensure j iterates up to 'degree'
+            tmp *= poly[j];
+        }
+        array[i] = tmp;
     }
-    array[i] = tmp;
-  }
-
 }
+
 
 
 int main (int argc, char* argv[]) {
   //TODO: add usage
   
   if (argc < 3) {
-    std::cerr<<"usage: "<<argv[0]<<" n degree block_size"<<std::endl;
+    std::cerr<<"usage: "<<argv[0]<<" n degree "<<std::endl;
     return -1;
   }
 
   int n = atoi(argv[1]); //TODO: atoi is an unsafe function
   int degree = atoi(argv[2]);
-  int block_size = atoi(argv[3]);
+  int block_size = 256;
   int nbiter = 1;
-
-  if(block_size <= 0) {
-    std::cerr<<"Invalid block size"<<std::endl;
-    return -1;
-  }
 
   float* array = new float[n];
   float* poly = new float[degree+1];
@@ -53,7 +45,8 @@ int main (int argc, char* argv[]) {
   
   // Code Add Here
   float *d_array, *d_poly;
-  cudaMalloc(&d_array, n*sizeof(float));
+  cudaMalloc(&d_array, n*sizeof(float)); 
+
   cudaMalloc(&d_poly, (degree+1)*sizeof(float));
   cudaMemcpy(d_array, array, n*sizeof(float), cudaMemcpyHostToDevice);
 
