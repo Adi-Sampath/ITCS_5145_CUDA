@@ -1,7 +1,6 @@
 #include <iostream>
 #include <chrono>
-#include <cuda_runtime.h>
-#include <cuda.h>
+
 //
 float polynomial (float x, float* poly, int degree) {
   float out = 0.;
@@ -13,33 +12,12 @@ float polynomial (float x, float* poly, int degree) {
   return out;
 }
 
-__global__ void polynomial_expansion_kernel(float* poly, int degree, int n, float* array) {
-    int i = blockIdx.x * blockDim.x + threadIdx.x;
-    if (i < n) {
-        float x = array[i];
-        float out = 0.;
-        float exp_x = 1.;
-        for (int j = 0; j <= degree; ++j) {
-            out += exp_x * poly[j];
-            exp_x *= x;
-        }
-        array[i] = out;
-    }
-}
-
 void polynomial_expansion (float* poly, int degree, int n, float* array) {
-    float* d_poly;
-    float* d_array;
-    cudaMalloc(&d_poly, (degree + 1) * sizeof(float));
-    cudaMalloc(&d_array, n * sizeof(float));
-    cudaMemcpy(d_poly, poly, (degree + 1) * sizeof(float), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_array, array, n * sizeof(float), cudaMemcpyHostToDevice);
-    polynomial_expansion_kernel<<<(n + 255) / 256, 256>>>(d_poly, degree, n, d_array);
-    cudaMemcpy(array, d_array, n * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaFree(d_poly);
-    cudaFree(d_array);
+    #pragma omp parallel for schedule(dynamic,1024)
+    for (int i=0; i< n; ++i) {
+      array[i] = polynomial (array[i], poly, degree);
+  }
 }
-
 
 int main (int argc, char* argv[]) {
   if (argc < 3) {
